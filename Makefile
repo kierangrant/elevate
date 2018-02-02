@@ -4,10 +4,10 @@ EXEC_TO_RUN=/bin/bash
 all: elevate generate-elevate-secret
 
 elevate: elevate.lisp
-	sbcl --noinform --disable-debugger --load "elevate.lisp" --eval "(progn (setf *secrets* \"${SECRETS}\" *exec-to-run* \"${EXEC_TO_RUN}\") (save-lisp-and-die \"elevate\" :executable t :toplevel #'main :save-runtime-options t))"
+	sbcl --noinform --load "elevate.lisp" --eval "(progn (setf *secrets* \"${SECRETS}\" *exec-to-run* \"${EXEC_TO_RUN}\") (save-lisp-and-die \"elevate\" :executable t :toplevel #'main :save-runtime-options t))"
 
 generate-elevate-secret: generate-elevate-secret.lisp
-	sbcl --noinform --disable-debugger --load "generate-elevate-secret.lisp" --eval "(save-lisp-and-die \"generate-elevate-secret\" :executable t :toplevel #'main :save-runtime-options t)"
+	sbcl --noinform --load "generate-elevate-secret.lisp" --eval "(save-lisp-and-die \"generate-elevate-secret\" :executable t :toplevel #'main :save-runtime-options t)"
 
 clean:
 	rm -fv generate-elevate-secret elevate

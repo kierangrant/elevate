@@ -6,26 +6,26 @@
 (defparameter *secrets* "/etc/elevate/secret")
 (defparameter *exec-to-run* "/bin/bash")
 
-(defun tty-echo (&optional (echo-on T))
-  (handler-case
-      (uiop/run-program:run-program
-       `("/bin/stty"
-	 ,(if echo-on "echo" "-echo"))
-       :force-shell nil
-       :input :interactive
-       :output :interactive
-       :error-output t)
-    (error ()
-      (format *error-output* "Could not set tty controls~%")
-      (uiop/image:quit -1))))
+(defun echo-off ()
+  (let ((tm (sb-posix:tcgetattr sb-sys:*tty*)))
+    (setf (sb-posix:termios-lflag tm)
+	  (logandc2 (sb-posix:termios-lflag tm) sb-posix:echo))
+    (sb-posix:tcsetattr sb-sys:*tty* sb-posix:tcsanow tm)))
+
+(defun echo-on ()
+  (let ((tm (sb-posix:tcgetattr sb-sys:*tty*)))
+    (setf (sb-posix:termios-lflag tm)
+	  (logior (sb-posix:termios-lflag tm) sb-posix:echo))
+    (sb-posix:tcsetattr sb-sys:*tty* sb-posix:tcsanow tm)))
 
 (defun prompt-password ()
   (let (response)
-    (tty-echo nil)
+    (echo-off)
     (format t "Password: ")
     (force-output)
-    (setf response (read-line))
-    (tty-echo)
+    (unwind-protect
+	 (setf response (read-line))
+      (echo-on))
     (terpri)
     response))
 
@@ -57,7 +57,7 @@
      :error-output t)))
 
 (defun main ()
-  (disable-debugger)
+  (setf *debugger-hook* (lambda (c e) (declare (ignore c e)) (continue)))
   (handler-case
       (process)
     (error ()
