@@ -30,16 +30,16 @@
   (let (password salt)
     (setf password (prompt-password))
     (setf salt
-	  (let ((key (random 4096))
+	  (let ((key (random (ash 1 96)))
 		(space
 		 (append
 		  (loop for i from 0 to 25 collecting (code-char (+ #x41 i)))
 		  (loop for i from 0 to 25 collecting (code-char (+ #x61 i)))
 		  (loop for i from 0 to 9 collecting (code-char (+ #x30 i)))
 		  '(#\. #\/))))
-	    (format nil "$6$~C~C"
-		    (elt space (ldb (byte 6 6) key))
-		    (elt space (ldb (byte 6 0) key)))))
+	    (format nil "$6$~{~C~}"
+		    (loop for i from 0 to 15 collecting
+			 (elt space (ldb (byte 6 (* 6 i)) key))))))
     (format t "~a~%" (crypt password salt))))
 
 (defun main ()
