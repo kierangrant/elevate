@@ -1,0 +1,29 @@
+What is elevate?
+
+It is a stupid little Common LISP (currently SBCL-specific) privilage elevator.
+
+It uses crypt(3) to work out password and compare it to a secret stored in a file.
+
+It was created as an example of using cap_setuid and cap_dac_override instead of running as root directly.
+
+Obviously, not actually meant for production use.
+
+The proof is that using cap_dac_override you could have a structure like this
+/etc/elevate set to owned by root:root with all permissions cleared
+/etc/elevate/secret set to owned by root:root with all permissioned cleared
+
+cap_dac_override would allow elevate to still read the secret's file
+cap_setuid would be used to call setresuid to all 0 and then run the program (not via execve...) that is set at compile-time
+
+It assumes that security is provided by YAMA in limiting PTRACE capability.
+
+I believe that if a process with capabilities is ptrace'd it looses them forcibly.
+(I did a test running under gdb and it couldn't read the secrets file, nor setresuid)
+
+*******************************************************************************************
+*******************************************************************************************
+*** WARNING: DO NOT USE FOR PRODUCTION USE. CONSIDER IT TO BE A SECURITY VULNERABILITY. ***
+*** I CANNOT ATTEST TO THE SECURITY OF EITHER IT'S CODE OR SBCL'S CODE                  ***
+*** DO NOT COME CRYING TO ME ABOUT PWNED SYSTEMS BECAUSE YOU USED THIS IN PRODUCTION    ***
+*******************************************************************************************
+*******************************************************************************************
